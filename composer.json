@@ -10,10 +10,12 @@
 		}
 	],
 	"require" : {
-		"php" : ">=5.3.2"
+		"php" : ">=5.3.2",
+        "google/google-api-php-client" : "1.0.4-beta"
 	},
 	"require-dev" : {
-		"symfony/framework-bundle" : ">=2.1,<2.2-dev"
+		"symfony/framework-bundle" : ">=2.1,<2.2-dev",
+        "google/google-api-php-client" : "1.0.4-beta"
 	},
 	"autoload" : {
 		"psr-4" : {
@@ -24,6 +26,21 @@
 			"type" : "git",
 			"url" : "https://github.com/sas-irad/google-admin-client-bundle-bundle/archive/master.zip",
 			"name" : "dev-master"
-		}
+		}, {
+            "type" : "package",
+            "package" : {
+                "name" : "google/google-api-php-client",
+                "version" : "1.0.4-beta",
+                "dist" : {
+                    "url" : "https://github.com/google/google-api-php-client/archive/1.0.4-beta.zip",
+                    "type" : "zip"
+                },
+                "autoload" : {
+                    "classmap" : [
+                        "src/"
+                    ]
+                }
+            }
+        }
 	]
 }
