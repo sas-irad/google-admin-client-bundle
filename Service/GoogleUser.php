@@ -6,7 +6,7 @@ use Google_Auth_Exception;
 use Google_Service_Directory_User_Resource;
 use Google_Service_Directory_User;
 use SAS\IRAD\GmailAccountLogBundle\Service\AccountLogger;
-use SAS\IRAD\PersonInfoBundle\PersonInfoInterface;
+use SAS\IRAD\PersonInfoBundle\PersonInfo\PersonInfoInterface;
 
 
 class GoogleUser {

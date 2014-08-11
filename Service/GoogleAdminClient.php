@@ -10,7 +10,7 @@ use Google_Service_Directory_User;
 use Google_Service_Directory_UserName;
 use SAS\IRAD\GmailAccountLogBundle\Service\AccountLogger;
 use SAS\IRAD\GmailOAuth2TokenBundle\Service\OAuth2TokenStorage;
-use SAS\IRAD\PersonInfoBundle\PersonInfoInterface;
+use SAS\IRAD\PersonInfoBundle\PersonInfo\PersonInfoInterface;
 
 
 class GoogleAdminClient {
