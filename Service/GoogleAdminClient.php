@@ -196,20 +196,6 @@ class GoogleAdminClient {
     
     
     /**
-     * Return the customer id associated with google_params.app_account. This value should be 
-     * stored in google_params.customer_id, but we need a method so we can initially find the
-     * value and display it in the admin token manager. (Do we need this anymore?)
-     */
-    public function getCustomerId() {
-        
-        $service      = $this->getDirectoryService();
-        $app_account  = $service->users->get($this->google_params['app_account']);
-        $customer_id  = $app_account->getCustomerId();
-    
-        return $customer_id;
-    }
-    
-    /**
      * Build a google user id for the domain specified in parameters.yml
      * @param string $identifier
      * @return string
