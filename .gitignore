@@ -4,3 +4,6 @@
 .teeproject
 vendor
 composer.lock
+Tests/app/cache
+Tests/app/logs
+Tests/app/config/parameters.yml

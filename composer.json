@@ -3,7 +3,7 @@
 	"type" : "symfony-bundle",
 	"description" : "Bundle for interfacing with Google Admin API",
 	"license" : "Apache-2.0",
-	"minimum-stability" : "dev",
+	"minimum-stability" : "stable",
 	"authors" : [{
 			"name" : "Roberto Mansfield",
 			"email" : "robertom@sas.upenn.edu"
@@ -11,11 +11,16 @@
 	],
 	"require" : {
 		"php" : ">=5.3.2",
-        "google/google-api-php-client" : "1.0.4-beta"
+		"google/google-api-php-client" : "1.0.4-beta",
+		"sas-irad/person-info-bundle" : ">=1.0.0"
 	},
 	"require-dev" : {
-		"symfony/framework-bundle" : ">=2.1,<2.2-dev",
-        "google/google-api-php-client" : "1.0.4-beta"
+        "symfony/framework-bundle" : ">=2.4,<2.5-dev",
+        "symfony/class-loader" : ">=2.4,<2.5-dev",
+        "symfony/console" : ">=2.4,<2.5-dev",
+        "symfony/debug" : ">=2.4,<2.5-dev",
+        "symfony/finder" : ">=2.4,<2.5-dev",
+        "symfony/yaml" : ">=2.4,<2.5-dev"
 	},
 	"autoload" : {
 		"psr-4" : {
@@ -23,24 +28,26 @@
 		}
 	},
 	"repositories" : [{
-			"type" : "git",
-			"url" : "https://github.com/sas-irad/google-admin-client-bundle-bundle/archive/master.zip",
-			"name" : "dev-master"
+			"type" : "vcs",
+            "url" : "https://github.com/sas-irad/google-admin-client-bundle"
 		}, {
-            "type" : "package",
-            "package" : {
-                "name" : "google/google-api-php-client",
-                "version" : "1.0.4-beta",
-                "dist" : {
-                    "url" : "https://github.com/google/google-api-php-client/archive/1.0.4-beta.zip",
-                    "type" : "zip"
-                },
-                "autoload" : {
-                    "classmap" : [
-                        "src/"
-                    ]
-                }
-            }
-        }
+            "type" : "vcs",
+            "url" : "https://github.com/sas-irad/person-info-bundle"
+        }, {
+			"type" : "package",
+			"package" : {
+				"name" : "google/google-api-php-client",
+				"version" : "1.0.4-beta",
+				"dist" : {
+					"url" : "https://github.com/google/google-api-php-client/archive/1.0.4-beta.zip",
+					"type" : "zip"
+				},
+				"autoload" : {
+					"classmap" : [
+						"src/"
+					]
+				}
+			}
+		}
 	]
 }
