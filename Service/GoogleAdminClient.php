@@ -10,6 +10,8 @@ use Google_Service_Directory_User;
 use Google_Service_Directory_UserName;
 use SAS\IRAD\GmailAccountLogBundle\Service\AccountLogger;
 use SAS\IRAD\GmailOAuth2TokenBundle\Service\OAuth2TokenStorage;
+use SAS\IRAD\PersonInfoBundle\PersonInfoInterface;
+
 
 class GoogleAdminClient {
     
@@ -313,7 +315,7 @@ class GoogleAdminClient {
      * @param string $password_hash sha1 hash of user's password
      * @throws Google_Service_Exception
      */
-    public function createGoogleUser(PersonInfo $personInfo, $password_hash) {
+    public function createGoogleUser(PersonInfoInterface $personInfo, $password_hash) {
     
         if ( !$this->isAccessTokenValid() ) {
             $this->refreshToken();
