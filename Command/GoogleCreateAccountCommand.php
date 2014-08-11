@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use SAS\IRAD\GoogleAdminClientBundle\Service\PersonInfo;
+use SAS\IRAD\PersonInfoBundle\PersonInfo\PersonInfo;
 
 class GoogleCreateAccountCommand extends ContainerAwareCommand {
     
