@@ -385,4 +385,37 @@ class GoogleAdminClient {
     public function getEmailDomain() {
         return $this->google_params['domain'];
     }
+    
+    
+    /**
+     * Return an array of users in this Google domain. We can only 
+     * retrieve 500 results at a time, so we need to "page" through
+     * the result set to build our array.
+     * @return array
+     */
+    public function getAllGoogleUsers() {
+
+        $accounts = array();
+        $options  = array('domain'     => $this->google_params['domain'],
+                          'maxResults' => 500 );
+        $nextPage = true;
+        
+        while ( $nextPage ) {
+            $result = $this->directory->users->listUsers($options);
+            
+            foreach ( $result->getUsers() as $user ) {
+                $email = $user->getPrimaryEmail();
+                list($identifier, $domain) = explode('@', $email);
+                $accounts[$identifier] = $email;
+            }
+            
+            $nextPage = $result->getNextPageToken();
+            if ( $nextPage ) {
+                ## use pageToken parameter to retrieve more results
+                $options['pageToken'] = $nextPage;
+            }
+        }
+
+        return $accounts;
+    }
 }
