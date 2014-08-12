@@ -74,15 +74,10 @@ class GoogleResetAccountCommand extends ContainerAwareCommand {
             $service = false;
         }
                 
-        // we need a pennkey or penn_id for lookups
-        if ( !$penn_id && !$pennkey ) {
-            throw new \Exception("A valid penn-id or pennkey parameter must be specified to lookup user information.");
-        }
-        
-        if ( $penn_id ) {
+        if ( $service ) {
             $personInfo = $service->findByPennId($penn_id);
         } else {
-            $personInfo = $service->findByPennkey($pennkey);
+            $personInfo = new PersonInfo(compact('penn_id', 'pennkey'));
         }
                 
         if ( !$personInfo ) {

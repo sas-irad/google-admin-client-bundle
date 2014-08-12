@@ -337,6 +337,7 @@ class GoogleAdminClient {
         
         // log success message
         $this->logger->log($personInfo, 'CREATE', "GMail account created.");
+        $this->logger->log($personInfo, 'UPDATE', "GMail account moved to OU=bulk-created-accounts.");
     }
 
     /**
