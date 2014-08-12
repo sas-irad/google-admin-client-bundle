@@ -236,14 +236,14 @@ class GoogleAdminClient {
         // do we have a pennkey?
         if ( $personInfo->getPennkey() ) {
             $user_id = $this->getUserId($personInfo->getPennkey());
-            $user = $this->_queryDirectoryUsers($user_id);
+            $user = $this->__queryDirectoryUsers($user_id);
         }
         
         // if not found by pennkey, try by penn_id hash
         if ( !$user ) {
             // we should definitely have a penn_id
             $user_id = $this->getUserId($this->getPennIdHash($personInfo->getPennId()));
-            $user = $this->_queryDirectoryUsers($user_id);
+            $user = $this->__queryDirectoryUsers($user_id);
         }
         
         if ( $user ) {
@@ -260,7 +260,7 @@ class GoogleAdminClient {
      * @throws Google_Service_Exception
      * @returns Google_Service_Directory_User
      */
-    private function _queryDirectoryUsers($user_id) {
+    private function __queryDirectoryUsers($user_id) {
         try {
             $user = $this->directory->users->get($user_id);
         } catch ( Google_Service_Exception $e ) {
