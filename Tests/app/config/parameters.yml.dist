@@ -1,0 +1,28 @@
+parameters:
+
+    oauth_params:
+        client_id:        ** client id generated above **
+        client_secret:    ** client secret generated above ** 
+        redirect_uri:     ** OAuth2 callback page: https://yourhost/path/app.php/admin/token/oauth2callback **
+
+        refresh_token_file:   ** path for refresh token storage **
+        access_token_file:    ** path for access token storage **
+
+        scopes:           
+            -                 https://www.googleapis.com/auth/admin.directory.orgunit
+            -                 https://www.googleapis.com/auth/admin.directory.user
+
+    admin_users:
+        ROLE_TOKEN_ADMIN: [ tokenAdmin1, tokenAdmin2, ... ]
+
+    file_storage:
+        keys:
+            public:     "%kernel.root_dir%/config/keys/public.pem"
+            private:    "%kernel.root_dir%/config/keys/private.pem"
+            
+    google_params:
+        domain:           gtest.sas.upenn.edu
+        relay_domain:     gmailrelay.sas.upenn.edu
+        hash_salt:        H7E1ZMw99Mu644035ajlU296
+        account_creation: on    ## set to on/yes/true to allow new accounts to be setup, off/no/false to restrict
+        report_errors_to: robertom@sas.upenn.edu
