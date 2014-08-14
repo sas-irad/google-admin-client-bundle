@@ -85,7 +85,7 @@ class GoogleBundleTest extends PHPUnit_Framework_TestCase {
         $personInfo = new PersonInfo($options);
         $account    = $admin->getGoogleUser($personInfo);
         
-        $this->assertFalse($account);
+        $this->assertFalse((boolean) $account);
         
         // account based on pennkey
         $options    = array('pennkey' => 'unittest');
@@ -95,7 +95,8 @@ class GoogleBundleTest extends PHPUnit_Framework_TestCase {
         $expected = "unittest@" . self::$params['domain'];
         
         $this->assertEquals('SAS\IRAD\GoogleAdminClientBundle\Service\GoogleUser', get_class($account));
-        $this->assertEquals($expected, $account->getUserId(), "The Google account 'unittest' needs to exist for testing.");
+        $this->assertEquals($expected,  $account->getUserId(),   "The Google account 'unittest' needs to exist for testing.");
+        $this->assertEquals('unittest', $account->getUsername());
 
         // account based on penn_id hash
         $options    = array('penn_id' => '99999999');
