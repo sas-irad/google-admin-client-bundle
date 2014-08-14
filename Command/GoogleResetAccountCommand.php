@@ -34,7 +34,7 @@ class GoogleResetAccountCommand extends ContainerAwareCommand {
         // okay we have a valid person and their info. get the gmail admin service
         $admin = $this->getContainer()->get('google_admin_client');
         
-        // does a google account already exist?
+        // does a google account exist?
         $user = $admin->getGoogleUser($personInfo);
         
         if ( !$user ) {
@@ -42,6 +42,7 @@ class GoogleResetAccountCommand extends ContainerAwareCommand {
         }
         
         $user->setOrgUnit('bulk-created-accounts');
+        $user->commit();
         $output->writeln("Google account reset for: $identifier");
     }
     
