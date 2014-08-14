@@ -90,7 +90,7 @@ class GoogleAdminClient {
         }
         
         if ( $user ) {
-            return new GoogleUser($user, $personInfo, $this, $this->logger);
+            return new GoogleUser($user, $this, $personInfo);
         }
         
         return false;
@@ -123,7 +123,7 @@ class GoogleAdminClient {
      * @param GoogleUser $user
      * @throws Google_Service_Exception
      */
-    public function updateGoogleUser(GoogleUser $user) {
+    public function updateGoogleUser(GoogleUser $user, $logEntries) {
         
         $this->client->prepareAccessToken();
         
@@ -134,8 +134,13 @@ class GoogleAdminClient {
             error_log($e->getMessage());
             throw $e;
         }
+
+        // log changes from user object
+        foreach ( $logEntries as $entry ) {
+            $this->logger->log($user->getPersonInfo(), $entry['type'], $entry['message']);
+        }
     }
-    
+
 
     /**
      * Rename a GoogleUser account. This is similar to the updateGoogleUser() method, but
@@ -143,24 +148,36 @@ class GoogleAdminClient {
      * @param GoogleUser $user
      * @throws Google_Service_Exception
      */
-    public function renameGoogleUser(GoogleUser $user, $newName, array $options = array()) {
+    public function renameGoogleUser(GoogleUser $user, $username, array $options = array()) {
     
         $this->client->prepareAccessToken();
     
-        $oldName = $user->getUserId();
+        $oldUserId  = $user->getUserId();
+        $newUserId  = $this->getUserId($username);
+        $personInfo = $user->getPersonInfo();
+        
         $serviceDirectoryUser = $user->getServiceDirectoryUser();
-        $serviceDirectoryUser->setPrimaryEmail($newName);
+        $serviceDirectoryUser->setPrimaryEmail($newUserId);
 
         try {
-            $this->directory->users->update($oldName, $serviceDirectoryUser);
+            $this->directory->users->update($oldUserId, $serviceDirectoryUser);
         } catch (Google_Service_Exception $e) {
             $this->logger->log($user->getPersonInfo(), 'ERROR', $e->getMessage());
             error_log($e->getMessages());
             throw $e;
         }
         
+        $this->logger->log($user->getPersonInfo(), 'INFO', "Account renamed from $oldUserId to $newUserId");
+        
         if ( isset($options['delete_alias']) && $options['delete_alias'] === true ) {
-            $this->directory->users_aliases->delete($newName, $oldName);
+            // we can delete any aliases if we are renaming a penn_id hash to pennkey
+            $this->directory->users_aliases->delete($newUserId, $oldUserId);
+        }
+        
+        // if we have a penn_id and pennkey, we should try to backfill 
+        // any missing pennkeys in the logs
+        if ( $personInfo->getPennId() && $personInfo->getPennkey() ) {
+            $this->logger->backFillPennkey($personInfo);
         }
     }    
     
@@ -181,8 +198,7 @@ class GoogleAdminClient {
         if ( !preg_match('/^[0-9a-f]{40}$/i', $password_hash) ) {
             throw new \Exception("GoogleAdminClient::createGoogleUser expects password parameter to be SHA-1 hash");
         }
-        
-        
+
         if ( $personInfo->getPennkey() ) {
             $user_id = $this->getUserId($personInfo->getPennkey());
         } else {
@@ -235,7 +251,7 @@ class GoogleAdminClient {
         }
         
         // log success message
-        $this->logger->log($user->getPersonInfo(), 'CREATE', "GMail account deleted.");        
+        $this->logger->log($user->getPersonInfo(), 'DELETE', "GMail account deleted.");        
     }
     
     
