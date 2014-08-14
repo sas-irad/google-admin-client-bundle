@@ -1,0 +1,7 @@
+<phpunit bootstrap="bootstrap.php" colors="true">
+	<testsuites>
+	  <testsuite name="Google Admin Client">
+	    <directory>testClasses</directory>
+	  </testsuite>
+	</testsuites>
+</phpunit>

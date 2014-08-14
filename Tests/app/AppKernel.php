@@ -12,7 +12,7 @@ class AppKernel extends Kernel
             new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),                
             new SAS\IRAD\FileStorageBundle\FileStorageBundle(),
             new SAS\IRAD\GmailAccountLogBundle\GmailAccountLogBundle(),
-            new SAS\IRAD\GmailOAuth2TokenBundle\GmailOAuth2TokenBundle(),
+            new SAS\IRAD\GoogleOAuth2TokenBundle\GoogleOAuth2TokenBundle(),
             new SAS\IRAD\GoogleAdminClientBundle\GoogleAdminClientBundle(),
          );
 

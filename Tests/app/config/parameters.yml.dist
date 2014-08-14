@@ -1,5 +1,13 @@
 parameters:
 
+    database_driver:  pdo_sqlite
+    database_path:    "%kernel.root_dir%/../data/account_log.db"
+    database_host:    ~
+    database_port:    ~
+    database_name:    ~
+    database_user:    ~
+    database_password: ~
+
     oauth_params:
         client_id:        ** client id generated above **
         client_secret:    ** client secret generated above ** 
