@@ -10,7 +10,6 @@ namespace SAS\IRAD\GoogleAdminClientBundle\Service;
 use Google_Auth_Exception;
 use Google_Service_Directory_User_Resource;
 use Google_Service_Directory_User;
-use SAS\IRAD\GmailAccountLogBundle\Service\AccountLogger;
 use SAS\IRAD\PersonInfoBundle\PersonInfo\PersonInfoInterface;
 
 
@@ -19,7 +18,6 @@ class GoogleUser {
     private $user_id;
     private $admin;
     private $user;
-    private $logger;
     private $personInfo;
     
     /**
@@ -29,12 +27,11 @@ class GoogleUser {
      */
     private $logEntries;
     
-    public function __construct(Google_Service_Directory_User $user, PersonInfoInterface $personInfo, GoogleAdminClient $admin, AccountLogger $logger) {
+    public function __construct(Google_Service_Directory_User $user, GoogleAdminClient $admin, PersonInfoInterface $personInfo) {
         
-        $this->admin      = $admin;
-        $this->user       = $user;
+        $this->admin  = $admin;
+        $this->user   = $user;
         $this->personInfo = $personInfo;
-        $this->logger     = $logger;
         
         $this->logEntries = array();
     }
@@ -45,13 +42,20 @@ class GoogleUser {
      * is finicky if we try do multple updates as separate transactions.
      */
     public function commit() {
-        $this->admin->updateGoogleUser($this);
-        foreach ( $this->logEntries as $entry ) {
-            $this->logger->log($this->personInfo, $entry['type'], $entry['message']);
-        }
+        $this->admin->updateGoogleUser($this, $this->logEntries);
         // reset
         $this->logEntries = array();
     }
+    
+    
+    /**
+     * Return the PersonInfo object used to construct this object
+     * @return PersonInfoInterface
+     */
+    public function getPersonInfo() {
+        return $this->personInfo;
+    }
+    
     
     /**
      * Set the first/last name on a Google account. Requires a call to commit()
@@ -115,17 +119,16 @@ class GoogleUser {
     public function renameToPennkey() {
         
         if ( !$this->isPennIdHash() ) {
-            throw new \Exception("Account name is not a penn-id hash");
+            throw new \Exception("GoogleUser::renameToPennkey() -- account is not a penn_id hash");
         }
         
-        $primaryEmail = $this->getLocalUserId();
+        $pennkey = $this->personInfo->getPennkey();
         
-        if ( !$primaryEmail ) {
-            throw new \Exception("Account rename requires a pennkey in PersonInfo");
+        if ( !$pennkey ) {
+            throw new \Exception("GoogleUser::renameToPennkey() expects a pennkey in the PersonInfo object");
         }
         
-        $this->admin->renameGoogleUser($this, $primaryEmail, array('delete_alias' => true));
-        $this->logger->backFillPennkey($this->personInfo);
+        $this->admin->renameGoogleUser($this, $pennkey, array('delete_alias' => true));
     }    
     
     /**
@@ -164,20 +167,13 @@ class GoogleUser {
         return $this->user->getPrimaryEmail();
     }
     
-    public function getLocalUserId() {
-        $pennkey = $this->personInfo->getPennkey();
-        if ( $pennkey ) {
-            return $pennkey . '@' . $this->admin->getEmailDomain();
-        }
-        return false;
+    public function getUsername() {
+        list($username, $domain) = explode('@', $this->getUserId());
+        return $username;
     }
     
     public function getServiceDirectoryUser() {
         return $this->user;
-    }
-    
-    public function getPersonInfo() {
-        return $this->personInfo;
     }
     
     /**
@@ -247,8 +243,7 @@ class GoogleUser {
      * Return true if the account name is a penn_id hash
      */
     public function isPennIdHash() {
-        $hashPennIdAccount = $this->admin->getUserId($this->admin->getPennIdHash($this->personInfo->getPennId()));
-        return ( $this->getUserId() == $hashPennIdAccount );
+        return ( (boolean) preg_match("/^[0-9a-f]{32}$/i", $this->getUsername()) );
     }
     
     /**
