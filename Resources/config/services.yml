@@ -1,4 +1,4 @@
 services:
     google_admin_client:
         class: SAS\IRAD\GoogleAdminClientBundle\Service\GoogleAdminClient
-        arguments: [ @account_logger, @oauth2_token_storage, %oauth_params%, %google_params% ]
+        arguments: [ @account_logger, @oauth2_client, %google_params% ]
