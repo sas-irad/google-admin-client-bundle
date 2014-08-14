@@ -56,6 +56,10 @@ class GoogleDeleteAccountCommand extends ContainerAwareCommand {
         // get user input
         $penn_id    = $input->getOption('penn-id');
         $pennkey    = strtolower($input->getOption('pennkey'));
+
+        if ( !$penn_id && !$pennkey ) {
+            throw new \Exception("A valid penn-id or pennkey parameter must be specified.");
+        }
         
         // validate penn_id and pennkey input
         if ( $penn_id && !preg_match("/^\d{8}$/", $penn_id) ) {
@@ -66,33 +70,27 @@ class GoogleDeleteAccountCommand extends ContainerAwareCommand {
             throw new \Exception("The pennkey parameter \"$pennkey\" is incorrect.");
         }
 
-        if ( !$penn_id && !$pennkey ) {
-            throw new \Exception("A valid penn-id or pennkey parameter must be specified.");
-        }
-        
-        $options = compact('penn_id', 'pennkey');
-        $personInfo = new PersonInfo($options);
-        
-        if ( $pennkey && $penn_id ) {
-            return $personInfo;
-        }
         
         // do we have a person_info_service we can use for lookups?
         try {
-            $service = $this->getContainer()->get('person_info_service');
+            $service = $this->getContainer()->get('penngroups.web_service_query');
         } catch (ServiceNotFoundException $e) {
             $service = false;
         }
         
         if ( !$service ) {
-            // nothing more we can do
-            return $personInfo;
+            // nothing more we can do, return the data we have if penn_id is defined (required for logging)
+            if ( !$penn_id ) {
+                throw new \Exception("The --penn-id parameter is required since no lookup service is defined.");
+            }
+            $options = compact('penn_id', 'pennkey');
+            return new PersonInfo($options);
         }
         
         if ( $penn_id ) {
-            $personInfo = $service->searchByPennId($penn_id);
+            $personInfo = $service->findByPennId($penn_id);
         } else {
-            $personInfo = $service->searchByPennkey($pennkey);
+            $personInfo = $service->findByPennkey($pennkey);
         }
         
         if ( !$personInfo ) {
@@ -102,6 +100,13 @@ class GoogleDeleteAccountCommand extends ContainerAwareCommand {
                 $error = "Pennkey \"$pennkey\" does not map to a known person.";
             }
             throw new \Exception($error);
+        }
+        
+        if ( $penn_id && $personInfo->getPennId() != $penn_id ) {
+            throw new \Exception("Data mismatch: --penn-id parameter does not match value returned from lookup service");
+        }
+        if ( $pennkey && $personInfo->getPennkey() != $pennkey ) {
+            throw new \Exception("Data mismatch: --pennkey parameter does not match value returned from lookup service");
         }
         
         return $personInfo;
