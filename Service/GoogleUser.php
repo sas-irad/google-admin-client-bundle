@@ -1,4 +1,9 @@
 <?php
+/**
+ * Front end for Google_Service_Directory_User 
+ * @author robertom@sas.upenn.edu
+ */
+
 
 namespace SAS\IRAD\GoogleAdminClientBundle\Service;
 
@@ -17,17 +22,40 @@ class GoogleUser {
     private $logger;
     private $personInfo;
     
-    public function __construct($user_id, Google_Service_Directory_user $user, PersonInfoInterface $personInfo, GoogleAdminClient $admin, AccountLogger $logger) {
+    /**
+     * Temp array to hold log entries for a user pending a "commit". If the commit
+     * is successful, we add the log entries.
+     * @var array
+     */
+    private $logEntries;
+    
+    public function __construct(Google_Service_Directory_User $user, PersonInfoInterface $personInfo, GoogleAdminClient $admin, AccountLogger $logger) {
         
-        $this->user_id    = $user_id;
         $this->admin      = $admin;
         $this->user       = $user;
         $this->personInfo = $personInfo;
         $this->logger     = $logger;
+        
+        $this->logEntries = array();
+    }
+    
+
+    /**
+     * Update the google user account with any changes we have made. The API
+     * is finicky if we try do multple updates as separate transactions.
+     */
+    public function commit() {
+        $this->admin->updateGoogleUser($this);
+        foreach ( $this->logEntries as $entry ) {
+            $this->logger->log($this->personInfo, $entry['type'], $entry['message']);
+        }
+        // reset
+        $this->logEntries = array();
     }
     
     /**
-     * Set the first/last name on a Google account
+     * Set the first/last name on a Google account. Requires a call to commit()
+     * to save.
      * @param array $name array("first_name" => $first, "last_name" => $last)
      * @throws \Exception
      */
@@ -47,41 +75,48 @@ class GoogleUser {
             $this->user->getName()->setGivenName($name['first_name']);
             $this->user->getName()->setFamilyName($name['last_name']);
 
-            $this->admin->updateGoogleUser($this);
-            $this->logger->log($this->personInfo, 'UPDATE', 'GMail account first/last name updated.');
+            $this->addLogEntry('UPDATE', 'GMail account first/last name updated.');
         }
     }
     
     /**
-     * Set the password on a Google account
-     * @param string $password
+     * Set the password on a Google account. Requires a call to commit() to save.
+     * @param string $password_hash sha1 hash of user password
      * @throws \Exception
      */
-    public function setPassword($password) {
+    public function setPassword($password_hash) {
         
-        if ( !$password ) {
+        if ( !$password_hash ) {
             throw new \Exception("GoogleUser::setPassword requires parameter for input");
         }
         
-        $this->user->setPassword($password);
-        $this->admin->updateGoogleUser($this);
-        $this->logger->log($this->personInfo, 'UPDATE', 'GMail password reset.');
+        if ( !preg_match('/^[0-9a-f]{40}$/i', $password_hash) ) {
+            throw new \Exception("GoogleUser::setPassword expects password parameter to be SHA-1 hash");      
+        }        
+        
+        $this->user->setHashFunction('SHA-1');
+        $this->user->setPassword($password_hash);        
+
+        $this->addLogEntry('UPDATE', 'GMail password reset.');
     }
     
     /**
-     * Set org unit on google account
+     * Set org unit on google account. Requires a call to commit() to save.
      * @param string $org_unit
      */
     public function setOrgUnit($org_unit) {
         $this->user->setOrgUnitPath("/$org_unit");
-        $this->admin->updateGoogleUser($this);
-        $this->logger->log($this->personInfo, 'UPDATE', "GMail account moved to OU=$org_unit.");
+        $this->addLogEntry('UPDATE', "GMail account moved to OU=$org_unit.");
     }
     
     /**
      * Rename a google account that was created with a penn_id hash to new name based on pennkey
      */
-    public function renameAccount() {
+    public function renameToPennkey() {
+        
+        if ( !$this->isPennIdHash() ) {
+            throw new \Exception("Account name is not a penn-id hash");
+        }
         
         $primaryEmail = $this->getLocalUserId();
         
@@ -89,18 +124,17 @@ class GoogleUser {
             throw new \Exception("Account rename requires a pennkey in PersonInfo");
         }
         
-        $this->user->setPrimaryEmail($primaryEmail);
-        $this->admin->updateGoogleUser($this);
+        $this->admin->renameGoogleUser($this, $primaryEmail, array('delete_alias' => true));
         $this->logger->backFillPennkey($this->personInfo);
     }    
     
     /**
      * Activate a Google account: set the password and move to "activated-accounts" OU
-     * @param string $password
+     * @param string $password_hash sha1 hash of user password
      */
-    public function activateAccount($password) {
+    public function activateAccount($password_hash) {
 
-        if ( !$password ) {
+        if ( !$password_hash ) {
             throw new \Exception("GoogleUser::activateAccount requires parameter for input");
         }
         
@@ -108,8 +142,10 @@ class GoogleUser {
             // rename account using pennkey
             $this->renameAccount();
         }
-        $this->setPassword($password);
+        
+        $this->setPassword($password_hash, array('commit' => false));
         $this->setOrgUnit('activated-accounts');
+        $this->commit();
    }
     
     public function getFullName() {
@@ -125,7 +161,7 @@ class GoogleUser {
     }
     
     public function getUserId() {
-        return $this->user_id;
+        return $this->user->getPrimaryEmail();
     }
     
     public function getLocalUserId() {
@@ -207,13 +243,29 @@ class GoogleUser {
         return $when;
     }    
     
+    /**
+     * Return true if the account name is a penn_id hash
+     */
     public function isPennIdHash() {
         $hashPennIdAccount = $this->admin->getUserId($this->admin->getPennIdHash($this->personInfo->getPennId()));
-        return ( $this->user->getPrimaryEmail() == $hashPennIdAccount );
+        return ( $this->getUserId() == $hashPennIdAccount );
     }
     
+    /**
+     * Return true if orgUnitPath is not in the "bulk" org
+     */
     public function isActivated() {
         // TODO: Should org unit path be parameter?
         return ( $this->user->getOrgUnitPath() != "/bulk-created-accounts" );
+    }
+    
+    /**
+     * Add a log message to the queue. This will get written to the log when we commit
+     * changes for this user
+     * @param string $type Log type: INFO, UPDATE, ERROR, CREATE
+     * @param string $message
+     */
+    private function addLogEntry($type, $message) {
+        array_push($this->logEntries, compact('type', 'message'));
     }
 }
