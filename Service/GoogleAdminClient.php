@@ -123,7 +123,7 @@ class GoogleAdminClient {
      * @param GoogleUser $user
      * @throws Google_Service_Exception
      */
-    public function updateGoogleUser(GoogleUser $user, $logEntries) {
+    public function updateGoogleUser(GoogleUser $user) {
         
         $this->client->prepareAccessToken();
         
@@ -136,7 +136,7 @@ class GoogleAdminClient {
         }
 
         // log changes from user object
-        foreach ( $logEntries as $entry ) {
+        foreach ( $user->getLogEntries() as $entry ) {
             $this->logger->log($user->getPersonInfo(), $entry['type'], $entry['message']);
         }
     }

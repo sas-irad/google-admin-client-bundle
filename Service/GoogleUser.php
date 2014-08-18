@@ -42,8 +42,8 @@ class GoogleUser {
      * is finicky if we try do multple updates as separate transactions.
      */
     public function commit() {
-        $this->admin->updateGoogleUser($this, $this->logEntries);
-        // reset
+        $this->admin->updateGoogleUser($this);
+        // reset logs
         $this->logEntries = array();
     }
     
@@ -174,6 +174,10 @@ class GoogleUser {
     
     public function getServiceDirectoryUser() {
         return $this->user;
+    }
+    
+    public function getLogEntries() {
+        return $this->logEntries;
     }
     
     /**
