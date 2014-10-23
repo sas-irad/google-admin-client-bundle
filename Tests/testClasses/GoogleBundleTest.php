@@ -332,10 +332,11 @@ class GoogleBundleTest extends PHPUnit_Framework_TestCase {
         // we should be in "bulk" org
         $this->assertEquals("/bulk-created-accounts", $account->getOrgUnitPath());
         $this->assertFalse($account->isActivated());
-    
+        
         // accounts are not ready until 24 hours after creation
         $this->assertTrue($account->isAccountPending());
     
+        // activate the account
         $account->activateAccount(sha1('bogusPassword'));
         $this->assertEquals("/activated-accounts", $account->getOrgUnitPath());
         
@@ -343,4 +344,54 @@ class GoogleBundleTest extends PHPUnit_Framework_TestCase {
         $admin->deleteGoogleUser($account);
     }    
     
+    /**
+     * Various tests on account readiness and activation
+     * @depends testAccountQueries
+     * @depends testAccountCreation
+     * @depends testAccountDeletion
+     */
+    public function testActivateAccountNoPennkey() {
+    
+        // create a test account without a pennkey
+        $options = array('penn_id'    => '00112233',
+                         'first_name' => 'Test1',
+                         'last_name'  => 'User');
+        $personInfo = new PersonInfo($options);
+    
+        try {
+            $admin = $this->getGoogleAdminClient();
+            $admin->createGoogleUser($personInfo, sha1('randomBogusPassword'));
+        } catch (\Exception $e) {
+            $this->fail("Error creating test account: " . $e->getMessage());
+        }
+    
+        // retrieve the account (but now user has pennkey)
+        $options = array('penn_id'    => '00112233',
+                         'pennkey'    => 'test1',
+                         'first_name' => 'Test1',
+                         'last_name'  => 'User');
+        $personInfo = new PersonInfo($options);
+        $account    = $admin->getGoogleUser($personInfo);
+    
+        // did we get a result
+        $this->assertEquals('SAS\IRAD\GoogleAdminClientBundle\Service\GoogleUser', get_class($account));
+    
+        // we should be in "bulk" org with a penn_id hash account
+        $this->assertEquals("/bulk-created-accounts", $account->getOrgUnitPath());
+        $this->assertFalse($account->isActivated());
+        $this->assertTrue($account->isPennIdHash());
+        
+        // accounts are not ready until 24 hours after creation
+        $this->assertTrue($account->isAccountPending());
+    
+        // activate the account
+        $account->activateAccount(sha1('bogusPassword'));
+        $this->assertEquals("/activated-accounts", $account->getOrgUnitPath());
+
+        // email user id should now be based on pennkey
+        $this->assertEquals($admin->getUserId('test1'), $account->getUserId());
+
+        // cleanup
+        $admin->deleteGoogleUser($account);
+    }    
 }

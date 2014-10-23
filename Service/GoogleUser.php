@@ -143,7 +143,7 @@ class GoogleUser {
         
         if ( $this->isPennIdHash() ) {
             // rename account using pennkey
-            $this->renameAccount();
+            $this->renameToPennkey();
         }
         
         $this->setPassword($password_hash, array('commit' => false));

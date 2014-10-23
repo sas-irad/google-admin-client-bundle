@@ -163,7 +163,7 @@ class GoogleAdminClient {
             $this->directory->users->update($oldUserId, $serviceDirectoryUser);
         } catch (Google_Service_Exception $e) {
             $this->logger->log($user->getPersonInfo(), 'ERROR', $e->getMessage());
-            error_log($e->getMessages());
+            error_log($e->getMessage());
             throw $e;
         }
         
