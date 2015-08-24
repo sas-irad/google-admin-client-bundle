@@ -349,6 +349,7 @@ class GoogleBundleTest extends PHPUnit_Framework_TestCase {
      * @depends testAccountQueries
      * @depends testAccountCreation
      * @depends testAccountDeletion
+     * @depends testActivateAccount
      */
     public function testActivateAccountNoPennkey() {
     
