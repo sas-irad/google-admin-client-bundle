@@ -21,12 +21,14 @@ class GoogleCreateAccountCommand extends ContainerAwareCommand {
             ->addOption('pennkey',    null, InputOption::VALUE_REQUIRED, "The user's Pennkey")
             ->addOption('first-name', null, InputOption::VALUE_REQUIRED, "The user's first name")
             ->addOption('last-name',  null, InputOption::VALUE_REQUIRED, "The user's last name")
+            ->addOption('log',        null, InputOption::VALUE_OPTIONAL, "Additional log entry for user")
             ;
         
         $this->setHelp("Create a Google account with the specified parameters. If the penngroups.web_service_query\n"  .
                        "is defined, then only the penn_id or pennkey is required. The other parameters\n"   .
                        "will be queried from the service. If it is NOT defined, then penn_id, first-name\n" .
-                       "and last-name are required.");
+                       "and last-name are required. Use the option 'log' parameter to add information to\n" .
+                       "to the user log for this account.");
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
@@ -46,9 +48,12 @@ class GoogleCreateAccountCommand extends ContainerAwareCommand {
             throw new \Exception("An account already exists for: $identifier");
         }
         
+        // do we have optional log info?
+        $log = $input->getOption('log');
+
         $password_hash = sha1($this->randomPassword());
         
-        $admin->createGoogleUser($personInfo, $password_hash);
+        $admin->createGoogleUser($personInfo, $password_hash, $log);
         $output->writeln("Google account created for: $identifier");
     }
     

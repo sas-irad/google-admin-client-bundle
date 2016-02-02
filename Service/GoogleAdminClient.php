@@ -187,7 +187,7 @@ class GoogleAdminClient {
      * @param string $password_hash sha1 hash of user's password
      * @throws Google_Service_Exception
      */
-    public function createGoogleUser(PersonInfoInterface $personInfo, $password_hash) {
+    public function createGoogleUser(PersonInfoInterface $personInfo, $password_hash, $log_info = false) {
     
         $this->client->prepareAccessToken();
     
@@ -225,6 +225,11 @@ class GoogleAdminClient {
             $this->logger->log($personInfo, 'ERROR', $e->getMessage());
             error_log($e->getMessage());
             throw $e;
+        }
+        
+        // add optional info to account log if provided
+        if ( $log_info ) {
+            $this->logger->log($personInfo, 'INFO', $log_info);
         }
         
         // log success message
