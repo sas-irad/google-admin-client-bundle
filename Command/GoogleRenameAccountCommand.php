@@ -17,9 +17,10 @@ class GoogleRenameAccountCommand extends ContainerAwareCommand {
         $this
             ->setName('google:rename-account')
             ->setDescription('Rename a google account to a new pennkey')
-            ->addOption('penn-id',     null, InputOption::VALUE_OPTIONAL, "The penn_id for the account")
-            ->addOption('old-pennkey', null, InputOption::VALUE_REQUIRED, "The old pennkey")
-            ->addOption('new-pennkey', null, InputOption::VALUE_REQUIRED, "The new pennkey")
+            ->addOption('penn-id',     null,  InputOption::VALUE_OPTIONAL, "The penn_id for the account")
+            ->addOption('old-pennkey', null,  InputOption::VALUE_REQUIRED, "The old pennkey")
+            ->addOption('new-pennkey', null,  InputOption::VALUE_REQUIRED, "The new pennkey")
+            ->addOption('delete-alias', null, InputOption::VALUE_NONE,     "Flag to delete the default alias from old to new account")
             ;
         
         $this->setHelp("Rename a Google account to a new pennkey. Only.");
@@ -59,8 +60,13 @@ class GoogleRenameAccountCommand extends ContainerAwareCommand {
             }
         }
 
+        $options = array();
+        if ( $input->getOption('delete-alias') ) {
+            $options['delete_alias'] = true;
+        }
+
         // rename the account and output the logs
-        $admin->renameGoogleUser($oldUser, $new_pennkey);
+        $admin->renameGoogleUser($oldUser, $new_pennkey, $options);
         $logger->updatePennkey($personInfo->getPennId(), $old_pennkey, $new_pennkey);
         
         $output->writeln("Google account \"$old_pennkey\" renamed to \"$new_pennkey\".");
